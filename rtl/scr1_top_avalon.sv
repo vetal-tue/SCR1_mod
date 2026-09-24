@@ -1,4 +1,5 @@
-// scr1_top_avalon.sv
+`include "scr1_arch_description.svh"
+
 module scr1_top_avalon #(
     parameter int ADDR_WIDTH = 32,
     parameter int DATA_WIDTH = 32
@@ -13,21 +14,19 @@ module scr1_top_avalon #(
     input logic test_rst_n,
 
     // Core Control & Interrupts (Conduit / Interrupt Sender в Platform Designer)
-    // input logic [31:0] hart_id,
     input logic [31:0] fuse_mhartid,
-    input logic [31:0] fuse_idcode,
-    // input logic        ext_irq,
-    // input logic        soft_irq,
-    // input logic        timer_irq,
     input logic [15:0] irq_lines,
 
+`ifdef SCR1_DBG_EN
+    input logic [31:0] fuse_idcode,  // TAPC IDCODE
     // -- JTAG I/F
-    input  logic trst_n,
-    input  logic tck,
-    input  logic tms,
-    input  logic tdi,
+    input logic trst_n,
+    input logic tck,
+    input logic tms,
+    input logic tdi,
     output logic tdo,
     output logic tdo_en,
+`endif  // SCR1_DBG_EN
 
     // --- Avalon-MM Master Instruction Memory (imem) ---
     output logic [    ADDR_WIDTH-1:0] imem_address,
@@ -80,11 +79,12 @@ module scr1_top_avalon #(
       .test_mode   (test_mode),
       .test_rst_n  (test_rst_n),
       .fuse_mhartid(fuse_mhartid),
-      .fuse_idcode (fuse_idcode),
       // .ext_irq     (ext_irq),
       // .soft_irq    (soft_irq),
       // .timer_irq   (timer_irq),
       .irq_lines   (irq_lines),
+`ifdef SCR1_DBG_EN
+      .fuse_idcode (fuse_idcode),
       // JTAG I/F
       .trst_n      (trst_n),
       .tck         (tck),
@@ -92,6 +92,7 @@ module scr1_top_avalon #(
       .tdi         (tdi),
       .tdo         (tdo),
       .tdo_en      (tdo_en),
+`endif  // SCR1_DBG_EN
       // IMEM AHB Master
       .imem_haddr  (imem_haddr),
       .imem_htrans (imem_htrans),
@@ -100,8 +101,8 @@ module scr1_top_avalon #(
       .imem_hprot  (imem_hprot),
       .imem_hrdata (imem_hrdata),
       .imem_hready (imem_hready),
-//      .imem_hresp  (imem_hresp),
-		.imem_hresp  ({1'b0,imem_hresp}),
+      //      .imem_hresp  (imem_hresp),
+      .imem_hresp  ({1'b0, imem_hresp}),
 
       // DMEM AHB Master
       .dmem_haddr (dmem_haddr),
@@ -113,8 +114,8 @@ module scr1_top_avalon #(
       .dmem_hwdata(dmem_hwdata),
       .dmem_hrdata(dmem_hrdata),
       .dmem_hready(dmem_hready),
-//      .dmem_hresp (dmem_hresp)
-		.dmem_hresp ({1'b0,dmem_hresp})
+      //      .dmem_hresp (dmem_hresp)
+      .dmem_hresp ({1'b0, dmem_hresp})
   );
 
   // --- Мост AHB->Avalon для IMEM (только чтение) ---
@@ -164,8 +165,8 @@ module scr1_top_avalon #(
       .HRESP        (dmem_hresp),
       .address      (dmem_address),
       .read         (dmem_read),
-      .write        (dmem_write),                    // Не используется
-      .writedata    (dmem_writedata),                    // Не используется
+      .write        (dmem_write),          // Не используется
+      .writedata    (dmem_writedata),      // Не используется
       .byteenable   (dmem_byteenable),
       .readdata     (dmem_readdata),
       .response     ('0),
